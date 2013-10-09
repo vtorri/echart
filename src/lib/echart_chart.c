@@ -54,6 +54,69 @@ struct _Echart_Chart
  *                                 Global                                     *
  *============================================================================*/
 
+Enesim_Renderer *
+echart_chart_compound_get(Echart_Chart *chart)
+{
+    Enesim_Renderer *c;
+    Enesim_Renderer *r;
+    Enesim_Renderer_Compound_Layer *l;
+    int i;
+
+    if (!chart)
+        return NULL;
+
+    c = enesim_renderer_compound_new();
+
+    /* background */
+    r = enesim_renderer_rectangle_new();
+    enesim_renderer_rectangle_position_set(r, 0, 0);
+    enesim_renderer_rectangle_size_set(r, chart->width, chart->height);
+    enesim_renderer_shape_fill_color_set(r, chart->background_color);
+    enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_FILL);
+
+    /* grid */
+    l = enesim_renderer_compound_layer_new();
+    enesim_renderer_compound_layer_renderer_set(l, r);
+    enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_FILL);
+    enesim_renderer_compound_layer_add(c, l);
+
+    for (i = 0; i < chart->grid.x_nbr; i++)
+    {
+        r = enesim_renderer_line_new();
+        enesim_renderer_line_coords_set(r, (i * (chart->width - 1)) / (double)(chart->grid.x_nbr - 1), 0, (i * (chart->width - 1)) / (double)(chart->grid.x_nbr - 1), chart->height);
+        enesim_renderer_shape_stroke_weight_set(r, 1);
+        if (i == 0)
+            enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        else
+            enesim_renderer_shape_stroke_color_set(r, 0xffcccccc);
+        enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+    }
+
+    for (i = 0; i < chart->grid.y_nbr; i++)
+    {
+        r = enesim_renderer_line_new();
+        enesim_renderer_line_coords_set(r, 0, (i * (chart->height - 1)) / (double)(chart->grid.y_nbr - 1), chart->width, (i * (chart->height - 1)) / (double)(chart->grid.y_nbr - 1));
+        enesim_renderer_shape_stroke_weight_set(r, 1);
+        if (i == (chart->grid.y_nbr - 1))
+            enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        else
+            enesim_renderer_shape_stroke_color_set(r, 0xffcccccc);
+        enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+    }
+
+    return c;
+}
+
 /*============================================================================*
  *                                   API                                      *
  *============================================================================*/
