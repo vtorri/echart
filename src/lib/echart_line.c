@@ -94,7 +94,7 @@ echart_line_new(Echart_Chart *chart)
     for (i = 0; i < (unsigned int)grid_x_nbr; i++)
     {
         r = enesim_renderer_line_new();
-        enesim_renderer_line_coords_set(r, (i * w) / (double)grid_x_nbr, 0, (i * w) / (double)grid_x_nbr, h);
+        enesim_renderer_line_coords_set(r, (i * (w - 1)) / (double)(grid_x_nbr - 1), 0, (i * (w - 1)) / (double)(grid_x_nbr - 1), h);
         enesim_renderer_shape_stroke_weight_set(r, 1);
         if (i == 0)
             enesim_renderer_shape_stroke_color_set(r, 0xff000000);
@@ -111,9 +111,9 @@ echart_line_new(Echart_Chart *chart)
     for (i = 0; i < (unsigned int)grid_y_nbr; i++)
     {
         r = enesim_renderer_line_new();
-        enesim_renderer_line_coords_set(r, 0, (i * h) / (double)grid_y_nbr, w, (i * h) / (double)grid_y_nbr);
+        enesim_renderer_line_coords_set(r, 0, (i * (h - 1)) / (double)(grid_y_nbr - 1), w, (i * (h - 1)) / (double)(grid_y_nbr - 1));
         enesim_renderer_shape_stroke_weight_set(r, 1);
-        if (i == 0)
+        if (i == (grid_y_nbr - 1))
             enesim_renderer_shape_stroke_color_set(r, 0xff000000);
         else
             enesim_renderer_shape_stroke_color_set(r, 0xffcccccc);

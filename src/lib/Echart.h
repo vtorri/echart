@@ -60,6 +60,8 @@ EAPI void echart_chart_background_color_set(Echart_Chart *chart, uint8_t a, uint
 EAPI Enesim_Argb echart_chart_background_color_get(const Echart_Chart *chart);
 EAPI void echart_chart_grid_nbr_set(Echart_Chart *chart, int grid_x_nbr, int grid_y_nbr);
 EAPI void echart_chart_grid_nbr_get(const Echart_Chart *chart, int *grid_x_nbr, int *grid_y_nbr);
+EAPI void echart_chart_grid_color_set(Echart_Chart *chart, uint8_t a, uint8_t r, uint8_t g, uint8_t b);
+EAPI Enesim_Argb echart_chart_grid_color_get(const Echart_Chart *chart);
 EAPI void echart_chart_data_set(Echart_Chart *chart, Echart_Data *data);
 EAPI const Echart_Data *echart_chart_data_get(const Echart_Chart *chart);
 

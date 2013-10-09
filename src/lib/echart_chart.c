@@ -38,8 +38,12 @@ struct _Echart_Chart
     Enesim_Argb background_color;
     int width;
     int height;
-    int grid_x_nbr;
-    int grid_y_nbr;
+    struct
+    {
+        int x_nbr;
+        int y_nbr;
+        Enesim_Argb color;
+    } grid;
 };
 
 /**
@@ -66,8 +70,9 @@ echart_chart_new(void)
     chart->width = 800;
     chart->height = 600;
     enesim_argb_components_from(&chart->background_color, 255, 128, 128, 128);
-    chart->grid_x_nbr = 5;
-    chart->grid_y_nbr = 5;
+    chart->grid.x_nbr = 5;
+    chart->grid.y_nbr = 5;
+    chart->grid.color = 0xffcccccc;
 
     return chart;
 }
@@ -131,8 +136,8 @@ echart_chart_grid_nbr_set(Echart_Chart *chart, int grid_x_nbr, int grid_y_nbr)
     if (!chart || (grid_x_nbr < 0) || (grid_y_nbr < 0))
         return;
 
-    chart->grid_x_nbr = grid_x_nbr;
-    chart->grid_y_nbr = grid_y_nbr;
+    chart->grid.x_nbr = grid_x_nbr;
+    chart->grid.y_nbr = grid_y_nbr;
 }
 
 EAPI void
@@ -145,8 +150,26 @@ echart_chart_grid_nbr_get(const Echart_Chart *chart, int *grid_x_nbr, int *grid_
         return;
     }
 
-    if (grid_x_nbr) *grid_x_nbr = chart->grid_x_nbr;
-    if (grid_y_nbr) *grid_y_nbr = chart->grid_y_nbr;
+    if (grid_x_nbr) *grid_x_nbr = chart->grid.x_nbr;
+    if (grid_y_nbr) *grid_y_nbr = chart->grid.y_nbr;
+}
+
+EAPI void
+echart_chart_grid_color_set(Echart_Chart *chart, uint8_t a, uint8_t r, uint8_t g, uint8_t b)
+{
+    if (!chart)
+        return;
+
+    enesim_argb_components_from(&chart->grid.color, a, r, g, b);
+}
+
+EAPI Enesim_Argb
+echart_chart_grid_color_get(const Echart_Chart *chart)
+{
+    if (!chart)
+        return 0xffcccccc;
+
+    return chart->grid.color;
 }
 
 EAPI void
