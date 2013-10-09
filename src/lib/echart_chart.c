@@ -23,6 +23,7 @@
 #include <Enesim.h>
 
 #include "Echart.h"
+#include "echart_private.h"
 
 /*============================================================================*
  *                                  Local                                     *
