@@ -60,6 +60,9 @@ echart_line_new(Echart_Chart *chart)
     Enesim_Renderer *r;
     Enesim_Renderer_Compound_Layer *l;
     Enesim_Path *p;
+    Enesim_Text_Font *f;
+    Enesim_Text_Engine *e;
+    Enesim_Rectangle geom;
     double avmin;
     double avmax;
     int w;
@@ -88,12 +91,15 @@ echart_line_new(Echart_Chart *chart)
     enesim_renderer_compound_layer_add(c, l);
 
     echart_chart_grid_nbr_get(chart, &grid_x_nbr, &grid_y_nbr);
-    for (i = 0; i < grid_x_nbr; i++)
+    for (i = 0; i < (unsigned int)grid_x_nbr; i++)
     {
         r = enesim_renderer_line_new();
         enesim_renderer_line_coords_set(r, (i * w) / (double)grid_x_nbr, 0, (i * w) / (double)grid_x_nbr, h);
         enesim_renderer_shape_stroke_weight_set(r, 1);
-        enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        if (i == 0)
+            enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        else
+            enesim_renderer_shape_stroke_color_set(r, 0xffcccccc);
         enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
 
         l = enesim_renderer_compound_layer_new();
@@ -102,12 +108,15 @@ echart_line_new(Echart_Chart *chart)
         enesim_renderer_compound_layer_add(c, l);
     }
 
-    for (i = 0; i < grid_y_nbr; i++)
+    for (i = 0; i < (unsigned int)grid_y_nbr; i++)
     {
         r = enesim_renderer_line_new();
         enesim_renderer_line_coords_set(r, 0, (i * h) / (double)grid_y_nbr, w, (i * h) / (double)grid_y_nbr);
         enesim_renderer_shape_stroke_weight_set(r, 1);
-        enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        if (i == 0)
+            enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        else
+            enesim_renderer_shape_stroke_color_set(r, 0xffcccccc);
         enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
 
         l = enesim_renderer_compound_layer_new();
@@ -149,6 +158,24 @@ echart_line_new(Echart_Chart *chart)
         enesim_renderer_shape_stroke_weight_set(r, 1);
         enesim_renderer_shape_stroke_color_set(r, echart_data_item_color_get(item));
         enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+
+        e = enesim_text_engine_default_get();
+        f = enesim_text_font_new_description_from(e, "arial", 16);
+        enesim_text_engine_unref(e);
+
+        r = enesim_renderer_text_span_new();
+        enesim_renderer_color_set(r, 0xff000000);
+        enesim_renderer_text_span_text_set(r, "Hello World!");
+        enesim_renderer_text_span_font_set(r, f);
+
+        enesim_renderer_shape_destination_geometry_get(r, &geom);
+        printf("%fx%f\n", geom.w, geom.h);
+        enesim_renderer_origin_set(r, (w - geom.w) / 2, h - geom.h);
 
         l = enesim_renderer_compound_layer_new();
         enesim_renderer_compound_layer_renderer_set(l, r);
