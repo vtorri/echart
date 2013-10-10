@@ -111,7 +111,11 @@ echart_data_items_set(Echart_Data *data, Echart_Data_Item *item)
 
     count = eina_list_count(data->items);
     if (count == 20)
+    {
+        WRN("Maximum items count reached");
+        /* FIXME : free item */
         return;
+    }
     if (count > 0)
     {
         item->color = _echart_chart_default_colors[count - 1];
