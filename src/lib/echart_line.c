@@ -73,11 +73,23 @@ echart_line_new(Echart_Chart *chart)
     if (!chart)
         return NULL;
 
+    data = echart_chart_data_get(chart);
+    if (!chart)
+    {
+        ERR("A chart must have at least a data");
+        return NULL;
+    }
+
+    if (echart_data_items_count(data) < 2)
+    {
+        ERR("Data must have at least 2 items");
+        return NULL;
+    }
+
     echart_chart_size_get(chart, &w, &h);
 
     c = echart_chart_compound_get(chart);
 
-    data = echart_chart_data_get(chart);
     absciss = echart_data_items_get(data, 0);
     echart_data_item_interval_get(absciss, &avmin, &avmax);
 
@@ -126,7 +138,6 @@ echart_line_new(Echart_Chart *chart)
         enesim_renderer_text_span_font_set(r, f);
 
         enesim_renderer_shape_destination_geometry_get(r, &geom);
-        printf("%fx%f\n", geom.w, geom.h);
         enesim_renderer_origin_set(r, (w - geom.w) / 2, h - geom.h);
 
         l = enesim_renderer_compound_layer_new();

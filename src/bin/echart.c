@@ -62,7 +62,6 @@ int main()
     /* we create the items for the data and add it to the data */
     /* first is the absciss, the following are the data themselves */
     item = echart_data_item_new();
-    echart_data_item_color_set(item, 255, 255, 255, 255);
     echart_data_item_value_add(item, 2004);
     echart_data_item_value_add(item, 2005);
     echart_data_item_value_add(item, 2006);
@@ -70,7 +69,6 @@ int main()
     echart_data_items_set(data, item);
 
     item = echart_data_item_new();
-    echart_data_item_color_set(item, 255, 0, 0, 255);
     echart_data_item_value_add(item, 1000);
     echart_data_item_value_add(item, 1170);
     echart_data_item_value_add(item, 660);
@@ -78,7 +76,6 @@ int main()
     echart_data_items_set(data, item);
 
     item = echart_data_item_new();
-    echart_data_item_color_set(item, 255, 255, 0, 0);
     echart_data_item_value_add(item, 400);
     echart_data_item_value_add(item, 460);
     echart_data_item_value_add(item, 1120);

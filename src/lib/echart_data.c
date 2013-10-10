@@ -23,6 +23,7 @@
 #include <Enesim.h>
 
 #include "Echart.h"
+#include "echart_private.h"
 
 /*============================================================================*
  *                                  Local                                     *
@@ -103,9 +104,18 @@ echart_data_title_get(const Echart_Data *data)
 EAPI void
 echart_data_items_set(Echart_Data *data, Echart_Data_Item *item)
 {
+    unsigned int count;
+
     if (!data || !item)
         return;
 
+    count = eina_list_count(data->items);
+    if (count == 20)
+        return;
+    if (count > 0)
+    {
+        item->color = _echart_chart_default_colors[count - 1];
+    }
     data->items = eina_list_append(data->items, item);
 }
 

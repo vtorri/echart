@@ -51,6 +51,8 @@ extern int echart_log_dom_global;
 #endif
 #define CRIT(...) EINA_LOG_DOM_CRIT(echart_log_dom_global, __VA_ARGS__)
 
+extern Enesim_Argb _echart_chart_default_colors[20];
+
 Enesim_Renderer *echart_chart_compound_get(Echart_Chart *chart);
 
 #endif

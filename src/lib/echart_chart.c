@@ -61,6 +61,30 @@ struct _Echart_Chart
  *                                 Global                                     *
  *============================================================================*/
 
+Enesim_Argb _echart_chart_default_colors[20] =
+{
+    0xff3366CC,
+    0xffDC3912,
+    0xffFF9900,
+    0xff109618,
+    0xff990099,
+    0xff3B3EAC,
+    0xff0099C6,
+    0xffDD4477,
+    0xff66AA00,
+    0xffB82E2E,
+    0xff316395,
+    0xff994499,
+    0xff22AA99,
+    0xffAAAA11,
+    0xff6633CC,
+    0xffE67300,
+    0xff8B0707,
+    0xff329262,
+    0xff5574A6,
+    0xff3B3EAC
+};
+
 Enesim_Renderer *
 echart_chart_compound_get(Echart_Chart *chart)
 {
@@ -140,7 +164,7 @@ echart_chart_compound_get(Echart_Chart *chart)
             /*                                 (chart->width - 1) * (j + i * (chart->sub_grid.x_nbr - 1)) / (double)((chart->grid.x_nbr - 1) * (chart->sub_grid.x_nbr - 1)), 1, */
             /*                                 (chart->width - 1) * (j + i * (chart->sub_grid.x_nbr - 1)) / (double)((chart->grid.x_nbr - 1) * (chart->sub_grid.x_nbr - 1)), chart->height - 1); */
             enesim_renderer_shape_stroke_weight_set(r, 1);
-            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 4);
+            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 5);
             enesim_renderer_shape_stroke_color_set(r, chart->sub_grid.color);
             enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
 
