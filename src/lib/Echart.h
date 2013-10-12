@@ -50,6 +50,14 @@ typedef struct _Echart_Chart Echart_Chart;
 typedef struct _Echart_Data Echart_Data;
 typedef struct _Echart_Data_Item Echart_Data_Item;
 
+typedef struct _Echart_Colors Echart_Colors;
+
+struct _Echart_Colors
+{
+    Enesim_Argb line;
+    Enesim_Argb area;
+};
+
 EAPI int echart_init(void);
 EAPI int echart_shutdown(void);
 
@@ -79,7 +87,7 @@ EAPI void echart_data_item_free(Echart_Data_Item *item);
 EAPI void echart_data_item_title_set(Echart_Data_Item *item, const char *title);
 EAPI const char *echart_data_item_title_get(const Echart_Data_Item *item);
 EAPI void echart_data_item_color_set(Echart_Data_Item *item, uint8_t a, uint8_t r, uint8_t g, uint8_t b);
-EAPI Enesim_Argb echart_data_item_color_get(const Echart_Data_Item *item);
+EAPI Echart_Colors echart_data_item_color_get(const Echart_Data_Item *item);
 EAPI void echart_data_item_value_add(Echart_Data_Item *item, double d);
 EAPI const Eina_List *echart_data_item_values_get(const Echart_Data_Item *item);
 EAPI void echart_data_item_interval_get(const Echart_Data_Item *item, double *vmin, double *vmax);

@@ -36,7 +36,7 @@
 struct _Echart_Data_Item
 {
     char *title;
-    Enesim_Argb color;
+    Echart_Colors color;
     Eina_List *values;
     double vmin;
     double vmax;
@@ -118,7 +118,7 @@ echart_data_items_set(Echart_Data *data, Echart_Data_Item *item)
     }
     if (count > 0)
     {
-        item->color = _echart_chart_default_colors[count - 1];
+        item->color = echart_chart_default_colors[count - 1];
     }
     data->items = eina_list_append(data->items, item);
 }
@@ -188,14 +188,16 @@ echart_data_item_color_set(Echart_Data_Item *item, uint8_t a, uint8_t r, uint8_t
     if (!item)
         return;
 
-    enesim_argb_components_from(&item->color, a, r, g, b);
+    enesim_argb_components_from(&item->color.line, a, r, g, b);
 }
 
-EAPI Enesim_Argb
+EAPI Echart_Colors
 echart_data_item_color_get(const Echart_Data_Item *item)
 {
+    Echart_Colors black = { 0xff000000, 0xff000000 };
+
     if (!item)
-        return 0xff000000;
+        return black;
 
     return item->color;
 }

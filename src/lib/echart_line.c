@@ -120,9 +120,6 @@ echart_line_renderer_get(const Echart_Line *line)
     Enesim_Renderer *r;
     Enesim_Renderer_Compound_Layer *l;
     Enesim_Path *p;
-    Enesim_Text_Font *f;
-    Enesim_Text_Engine *e;
-    Enesim_Rectangle geom;
     Enesim_Color color;
     double avmin;
     double avmax;
@@ -156,19 +153,19 @@ echart_line_renderer_get(const Echart_Line *line)
     absciss = echart_data_items_get(data, 0);
     echart_data_item_interval_get(absciss, &avmin, &avmax);
 
-    for (j = 1; j < echart_data_items_count(data); j++)
+    if (line->area)
     {
-        double vmin;
-        double vmax;
-        double d1;
-        double d2;
-        uint8_t ca, cr, cg, cb;
-
-        item = echart_data_items_get(data, j);
-        echart_data_item_interval_get(item, &vmin, &vmax);
-
-        if (line->area)
+        for (j = 1; j < echart_data_items_count(data); j++)
         {
+            double vmin;
+            double vmax;
+            double d1;
+            double d2;
+            uint8_t ca, cr, cg, cb;
+
+            item = echart_data_items_get(data, j);
+            echart_data_item_interval_get(item, &vmin, &vmax);
+
             p = enesim_path_new();
             enesim_path_move_to(p, 1, h - 1);
             for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
@@ -184,8 +181,8 @@ echart_line_renderer_get(const Echart_Line *line)
 
             r = enesim_renderer_path_new();
             enesim_renderer_path_path_set(r, p);
-            enesim_argb_components_to(echart_data_item_color_get(item), &ca, &cr, &cg, &cb);
-            ca = 128;
+            enesim_argb_components_to(echart_data_item_color_get(item).area, &ca, &cr, &cg, &cb);
+            ca = 220;
             enesim_color_components_from(&color, ca, cr, cg, cb);
             enesim_renderer_shape_fill_color_set(r, color);
             enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_FILL);
@@ -195,6 +192,17 @@ echart_line_renderer_get(const Echart_Line *line)
             enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
             enesim_renderer_compound_layer_add(c, l);
         }
+    }
+
+    for (j = 1; j < echart_data_items_count(data); j++)
+    {
+        double vmin;
+        double vmax;
+        double d1;
+        double d2;
+
+        item = echart_data_items_get(data, j);
+        echart_data_item_interval_get(item, &vmin, &vmax);
 
         p = enesim_path_new();
         for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
@@ -212,25 +220,8 @@ echart_line_renderer_get(const Echart_Line *line)
         r = enesim_renderer_path_new();
         enesim_renderer_path_path_set(r, p);
         enesim_renderer_shape_stroke_weight_set(r, 1);
-        enesim_renderer_shape_stroke_color_set(r, echart_data_item_color_get(item));
+        enesim_renderer_shape_stroke_color_set(r, echart_data_item_color_get(item).line);
         enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
-
-        l = enesim_renderer_compound_layer_new();
-        enesim_renderer_compound_layer_renderer_set(l, r);
-        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
-        enesim_renderer_compound_layer_add(c, l);
-
-        e = enesim_text_engine_default_get();
-        f = enesim_text_font_new_description_from(e, "arial", 16);
-        enesim_text_engine_unref(e);
-
-        r = enesim_renderer_text_span_new();
-        enesim_renderer_color_set(r, 0xff000000);
-        enesim_renderer_text_span_text_set(r, "Hello World!");
-        enesim_renderer_text_span_font_set(r, f);
-
-        enesim_renderer_shape_destination_geometry_get(r, &geom);
-        enesim_renderer_origin_set(r, (w - geom.w) / 2, h - geom.h);
 
         l = enesim_renderer_compound_layer_new();
         enesim_renderer_compound_layer_renderer_set(l, r);

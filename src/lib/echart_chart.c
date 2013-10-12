@@ -61,28 +61,28 @@ struct _Echart_Chart
  *                                 Global                                     *
  *============================================================================*/
 
-Enesim_Argb _echart_chart_default_colors[20] =
+Echart_Colors echart_chart_default_colors[20] =
 {
-    0xff3366CC,
-    0xffDC3912,
-    0xffFF9900,
-    0xff109618,
-    0xff990099,
-    0xff3B3EAC,
-    0xff0099C6,
-    0xffDD4477,
-    0xff66AA00,
-    0xffB82E2E,
-    0xff316395,
-    0xff994499,
-    0xff22AA99,
-    0xffAAAA11,
-    0xff6633CC,
-    0xffE67300,
-    0xff8B0707,
-    0xff329262,
-    0xff5574A6,
-    0xff3B3EAC
+    { 0xff3366CC, 0xffc2d1f0 },
+    { 0xffDC3912, 0xfff5c4b8 },
+    { 0xffFF9900, 0xffffe0b3 },
+    { 0xff109618, 0xffb7dfba },
+    { 0xff990099, 0xffe0b3e0 },
+    { 0xff3B3EAC, 0xffb3e0ee },
+    { 0xff0099C6, 0xfff5c7d6 },
+    { 0xffDD4477, 0xffd1e6b3 },
+    { 0xff66AA00, 0xffeac0c0 },
+    { 0xffB82E2E, 0xffc1d0df },
+    { 0xff316395, 0xffe0c7e0 },
+    { 0xff994499, 0xffbde6e0 },
+    { 0xff22AA99, 0xffe6e6b8 },
+    { 0xffAAAA11, 0xffd1c2f0 },
+    { 0xff6633CC, 0xfff7d5b3 },
+    { 0xffE67300, 0xffdcb5b5 },
+    { 0xff8B0707, 0xffd1b7d1 },
+    { 0xff329262, 0xffc2ded0 },
+    { 0xff5574A6, 0xffccd5e4 },
+    { 0xff3B3EAC, 0xffc4c5e6 }
 };
 
 Enesim_Renderer *
@@ -91,6 +91,9 @@ echart_chart_compound_get(const Echart_Chart *chart)
     Enesim_Renderer *c;
     Enesim_Renderer *r;
     Enesim_Renderer_Compound_Layer *l;
+    Enesim_Text_Font *f;
+    Enesim_Text_Engine *e;
+    Enesim_Rectangle geom;
     int i;
 
     if (!chart)
@@ -159,12 +162,8 @@ echart_chart_compound_get(const Echart_Chart *chart)
 
             r = enesim_renderer_path_new();
             enesim_renderer_path_path_set(r, p);
-            /* r = enesim_renderer_line_new(); */
-            /* enesim_renderer_line_coords_set(r, */
-            /*                                 (chart->width - 1) * (j + i * (chart->sub_grid.x_nbr - 1)) / (double)((chart->grid.x_nbr - 1) * (chart->sub_grid.x_nbr - 1)), 1, */
-            /*                                 (chart->width - 1) * (j + i * (chart->sub_grid.x_nbr - 1)) / (double)((chart->grid.x_nbr - 1) * (chart->sub_grid.x_nbr - 1)), chart->height - 1); */
             enesim_renderer_shape_stroke_weight_set(r, 1);
-            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 5);
+            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 8);
             enesim_renderer_shape_stroke_color_set(r, chart->sub_grid.color);
             enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
 
@@ -174,6 +173,49 @@ echart_chart_compound_get(const Echart_Chart *chart)
             enesim_renderer_compound_layer_add(c, l);
         }
     }
+
+    for (i = 0; i < chart->grid.y_nbr; i++)
+    {
+        int j;
+
+        for (j = 1; j < (chart->sub_grid.y_nbr - 1); j++)
+        {
+            Enesim_Path *p;
+
+            p = enesim_path_new();
+            enesim_path_move_to(p, 1, (chart->height - 1) * (j + i * (chart->sub_grid.y_nbr - 1)) / (double)((chart->grid.y_nbr - 1) * (chart->sub_grid.y_nbr - 1)));
+            enesim_path_line_to(p, chart->width - 1, (chart->height - 1) * (j + i * (chart->sub_grid.y_nbr - 1)) / (double)((chart->grid.y_nbr - 1) * (chart->sub_grid.y_nbr - 1)));
+
+            r = enesim_renderer_path_new();
+            enesim_renderer_path_path_set(r, p);
+            enesim_renderer_shape_stroke_weight_set(r, 1);
+            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 8);
+            enesim_renderer_shape_stroke_color_set(r, chart->sub_grid.color);
+            enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+            l = enesim_renderer_compound_layer_new();
+            enesim_renderer_compound_layer_renderer_set(l, r);
+            enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+            enesim_renderer_compound_layer_add(c, l);
+        }
+    }
+
+    e = enesim_text_engine_default_get();
+    f = enesim_text_font_new_description_from(e, "arial", 16);
+    enesim_text_engine_unref(e);
+
+    r = enesim_renderer_text_span_new();
+    enesim_renderer_color_set(r, 0xff000000);
+    enesim_renderer_text_span_text_set(r, "Hello World!");
+    enesim_renderer_text_span_font_set(r, f);
+
+    enesim_renderer_shape_destination_geometry_get(r, &geom);
+    enesim_renderer_origin_set(r, (chart->width - geom.w) / 2, chart->height - geom.h);
+
+    l = enesim_renderer_compound_layer_new();
+    enesim_renderer_compound_layer_renderer_set(l, r);
+    enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+    enesim_renderer_compound_layer_add(c, l);
 
     return c;
 }
@@ -196,10 +238,10 @@ echart_chart_new(void)
     enesim_argb_components_from(&chart->background_color, 255, 128, 128, 128);
     chart->grid.x_nbr = 5;
     chart->grid.y_nbr = 5;
-    chart->grid.color = 0xffcccccc;
+    chart->grid.color = 0xff888888;
     chart->sub_grid.x_nbr = 5;
     chart->sub_grid.y_nbr = 5;
-    chart->sub_grid.color = 0xff00ff00;
+    chart->sub_grid.color = 0xffeeeeee;
 
     return chart;
 }
