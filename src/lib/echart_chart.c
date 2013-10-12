@@ -86,7 +86,7 @@ Enesim_Argb _echart_chart_default_colors[20] =
 };
 
 Enesim_Renderer *
-echart_chart_compound_get(Echart_Chart *chart)
+echart_chart_compound_get(const Echart_Chart *chart)
 {
     Enesim_Renderer *c;
     Enesim_Renderer *r;

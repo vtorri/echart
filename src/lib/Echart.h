@@ -45,6 +45,7 @@
 # endif
 #endif
 
+typedef struct _Echart_Line Echart_Line;
 typedef struct _Echart_Chart Echart_Chart;
 typedef struct _Echart_Data Echart_Data;
 typedef struct _Echart_Data_Item Echart_Data_Item;
@@ -83,6 +84,12 @@ EAPI void echart_data_item_value_add(Echart_Data_Item *item, double d);
 EAPI const Eina_List *echart_data_item_values_get(const Echart_Data_Item *item);
 EAPI void echart_data_item_interval_get(const Echart_Data_Item *item, double *vmin, double *vmax);
 
-EAPI Enesim_Renderer *echart_line_new(Echart_Chart *chart);
+EAPI Echart_Line *echart_line_new(void);
+EAPI void echart_line_chart_free(Echart_Line *line);
+EAPI void echart_line_chart_set(Echart_Line *line, const Echart_Chart *chart);
+EAPI const Echart_Chart *echart_line_chart_get(const Echart_Line *line);
+EAPI void echart_line_area_set(Echart_Line *line, Eina_Bool area);
+EAPI Eina_Bool echart_line_area_get(const Echart_Line *line);
+EAPI Enesim_Renderer *echart_line_renderer_get(const Echart_Line *line);
 
 #endif

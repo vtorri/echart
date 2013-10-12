@@ -53,6 +53,6 @@ extern int echart_log_dom_global;
 
 extern Enesim_Argb _echart_chart_default_colors[20];
 
-Enesim_Renderer *echart_chart_compound_get(Echart_Chart *chart);
+Enesim_Renderer *echart_chart_compound_get(const Echart_Chart *chart);
 
 #endif

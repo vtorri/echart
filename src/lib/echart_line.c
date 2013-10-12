@@ -35,7 +35,9 @@
 
 struct _Echart_Line
 {
-    Echart_Chart *chart;
+    const Echart_Chart *chart;
+    unsigned int area : 1;
+    unsigned int additive: 1;
 };
 
 /**
@@ -50,9 +52,67 @@ struct _Echart_Line
  *                                   API                                      *
  *============================================================================*/
 
-EAPI Enesim_Renderer *
-echart_line_new(Echart_Chart *chart)
+EAPI Echart_Line *
+echart_line_new(void)
 {
+    Echart_Line *line;
+
+    line = (Echart_Line *)calloc(1, sizeof(Echart_Line));
+    if (!line)
+        return NULL;
+
+    return line;
+}
+
+EAPI void
+echart_line_chart_free(Echart_Line *line)
+{
+    if (!line)
+        return;
+
+    free(line);
+}
+
+EAPI void
+echart_line_chart_set(Echart_Line *line, const Echart_Chart *chart)
+{
+    if (!line || !chart)
+        return;
+
+    line->chart = chart;
+}
+
+EAPI const Echart_Chart *
+echart_line_chart_get(const Echart_Line *line)
+{
+    if (!line)
+        return NULL;
+
+    return line->chart;
+}
+
+EAPI void
+echart_line_area_set(Echart_Line *line, Eina_Bool area)
+{
+    if (!line || (line->area == !! area))
+        return;
+
+    line->area = !!area;
+}
+
+EAPI Eina_Bool
+echart_line_area_get(const Echart_Line *line)
+{
+    if (!line)
+        return EINA_FALSE;
+
+    return line->area;
+}
+
+EAPI Enesim_Renderer *
+echart_line_renderer_get(const Echart_Line *line)
+{
+    const Echart_Chart *chart;
     const Echart_Data *data;
     const Echart_Data_Item *absciss;
     const Echart_Data_Item *item;
@@ -63,6 +123,7 @@ echart_line_new(Echart_Chart *chart)
     Enesim_Text_Font *f;
     Enesim_Text_Engine *e;
     Enesim_Rectangle geom;
+    Enesim_Color color;
     double avmin;
     double avmax;
     int w;
@@ -70,8 +131,10 @@ echart_line_new(Echart_Chart *chart)
     unsigned int i;
     unsigned int j;
 
-    if (!chart)
+    if (!line)
         return NULL;
+
+    chart = line->chart;
 
     data = echart_chart_data_get(chart);
     if (!chart)
@@ -97,16 +160,45 @@ echart_line_new(Echart_Chart *chart)
     {
         double vmin;
         double vmax;
+        double d1;
+        double d2;
+        uint8_t ca, cr, cg, cb;
 
         item = echart_data_items_get(data, j);
         echart_data_item_interval_get(item, &vmin, &vmax);
 
+        if (line->area)
+        {
+            p = enesim_path_new();
+            enesim_path_move_to(p, 1, h - 1);
+            for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
+            {
+                d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
+                d1 = w * (d1 - avmin) / (avmax - avmin);
+                d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
+                d2 = h * (d2 - vmin) / (vmax - vmin);
+                enesim_path_line_to(p, d1, h - d2);
+            }
+            enesim_path_line_to(p, w - 1, h - 1);
+            enesim_path_close(p);
+
+            r = enesim_renderer_path_new();
+            enesim_renderer_path_path_set(r, p);
+            enesim_argb_components_to(echart_data_item_color_get(item), &ca, &cr, &cg, &cb);
+            ca = 128;
+            enesim_color_components_from(&color, ca, cr, cg, cb);
+            enesim_renderer_shape_fill_color_set(r, color);
+            enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_FILL);
+
+            l = enesim_renderer_compound_layer_new();
+            enesim_renderer_compound_layer_renderer_set(l, r);
+            enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+            enesim_renderer_compound_layer_add(c, l);
+        }
+
         p = enesim_path_new();
         for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
         {
-            double d1;
-            double d2;
-
             d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
             d1 = w * (d1 - avmin) / (avmax - avmin);
             d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
