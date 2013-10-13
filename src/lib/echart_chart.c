@@ -44,13 +44,7 @@ struct _Echart_Chart
         int x_nbr;
         int y_nbr;
         Enesim_Argb color;
-    } grid;
-    struct
-    {
-        int x_nbr;
-        int y_nbr;
-        Enesim_Argb color;
-    } sub_grid;
+    } grid, sub_grid;
 };
 
 /**
@@ -319,6 +313,48 @@ echart_chart_grid_color_get(const Echart_Chart *chart)
         return 0xffcccccc;
 
     return chart->grid.color;
+}
+
+EAPI void
+echart_chart_sub_grid_nbr_set(Echart_Chart *chart, int grid_x_nbr, int grid_y_nbr)
+{
+    if (!chart || (grid_x_nbr < 0) || (grid_y_nbr < 0))
+        return;
+
+    chart->sub_grid.x_nbr = grid_x_nbr;
+    chart->sub_grid.y_nbr = grid_y_nbr;
+}
+
+EAPI void
+echart_chart_sub_grid_nbr_get(const Echart_Chart *chart, int *grid_x_nbr, int *grid_y_nbr)
+{
+    if (!chart)
+    {
+        if (grid_x_nbr) *grid_x_nbr = 0;
+        if (grid_y_nbr) *grid_y_nbr = 0;
+        return;
+    }
+
+    if (grid_x_nbr) *grid_x_nbr = chart->sub_grid.x_nbr;
+    if (grid_y_nbr) *grid_y_nbr = chart->sub_grid.y_nbr;
+}
+
+EAPI void
+echart_chart_sub_grid_color_set(Echart_Chart *chart, uint8_t a, uint8_t r, uint8_t g, uint8_t b)
+{
+    if (!chart)
+        return;
+
+    enesim_argb_components_from(&chart->sub_grid.color, a, r, g, b);
+}
+
+EAPI Enesim_Argb
+echart_chart_sub_grid_color_get(const Echart_Chart *chart)
+{
+    if (!chart)
+        return 0xffcccccc;
+
+    return chart->sub_grid.color;
 }
 
 EAPI void

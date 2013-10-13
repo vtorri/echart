@@ -146,6 +146,10 @@ echart_line_renderer_get(const Echart_Line *line)
     Eina_Rectangle rect;
     double avmin;
     double avmax;
+    int grid_x_nbr;
+    int grid_y_nbr;
+    int sub_grid_x_nbr;
+    int sub_grid_y_nbr;
     int x_area;
     int y_area;
     int w_area;
@@ -175,11 +179,23 @@ echart_line_renderer_get(const Echart_Line *line)
 
     echart_chart_size_get(chart, &w, &h);
 
-    c = echart_chart_compound_get(chart);
+    c = enesim_renderer_compound_new();
 
     e = enesim_text_engine_default_get();
     f = enesim_text_font_new_description_from(e, "arial", 16);
     enesim_text_engine_unref(e);
+
+    /* background */
+    r = enesim_renderer_rectangle_new();
+    enesim_renderer_rectangle_position_set(r, 0, 0);
+    enesim_renderer_rectangle_size_set(r, w, h);
+    enesim_renderer_shape_fill_color_set(r, echart_chart_background_color_get(chart));
+    enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_FILL);
+
+    l = enesim_renderer_compound_layer_new();
+    enesim_renderer_compound_layer_renderer_set(l, r);
+    enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_FILL);
+    enesim_renderer_compound_layer_add(c, l);
 
     /* title */
 
@@ -256,6 +272,93 @@ echart_line_renderer_get(const Echart_Line *line)
     }
     h_area = h - y_area - h_area;
 
+    /* grid */
+    echart_chart_grid_nbr_get(chart, &grid_x_nbr, &grid_y_nbr);
+    for (i = 0; i < (unsigned int)grid_x_nbr; i++)
+    {
+        r = enesim_renderer_line_new();
+        enesim_renderer_line_coords_set(r,
+                                        x_area + (i * w_area) / (double)(grid_x_nbr - 1), h - y_area,
+                                        x_area + (i * w_area) / (double)(grid_x_nbr - 1), h - h_area - y_area);
+        enesim_renderer_shape_stroke_weight_set(r, 1);
+        if (i == 0)
+            enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        else
+            enesim_renderer_shape_stroke_color_set(r, echart_chart_grid_color_get(chart));
+        enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+    }
+
+    for (i = 0; i < (unsigned int)grid_y_nbr; i++)
+    {
+        r = enesim_renderer_line_new();
+        enesim_renderer_line_coords_set(r,
+                                        x_area, h - y_area - (i * h_area) / (double)(grid_y_nbr - 1),
+                                        x_area + w_area, h - y_area - (i * h_area) / (double)(grid_y_nbr - 1));
+        enesim_renderer_shape_stroke_weight_set(r, 1);
+        if (i == 0)
+            enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        else
+            enesim_renderer_shape_stroke_color_set(r, echart_chart_grid_color_get(chart));
+        enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+    }
+
+    /* sub grid */
+    echart_chart_sub_grid_nbr_get(chart, &sub_grid_x_nbr, &sub_grid_y_nbr);
+    for (i = 0; i < (unsigned int)grid_x_nbr; i++)
+    {
+        for (j = 1; j < ((unsigned int)sub_grid_x_nbr - 1); j++)
+        {
+            p = enesim_path_new();
+            enesim_path_move_to(p, x_area + w_area * (j + i * (sub_grid_x_nbr - 1)) / (double)((grid_x_nbr - 1) * (sub_grid_x_nbr - 1)), h - h_area - y_area + 1);
+            enesim_path_line_to(p, x_area + w_area * (j + i * (sub_grid_x_nbr - 1)) / (double)((grid_x_nbr - 1) * (sub_grid_x_nbr - 1)), h - y_area);
+
+            r = enesim_renderer_path_new();
+            enesim_renderer_path_path_set(r, p);
+            enesim_renderer_shape_stroke_weight_set(r, 1);
+            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 8);
+            enesim_renderer_shape_stroke_color_set(r, echart_chart_sub_grid_color_get(chart));
+            enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+            l = enesim_renderer_compound_layer_new();
+            enesim_renderer_compound_layer_renderer_set(l, r);
+            enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+            enesim_renderer_compound_layer_add(c, l);
+        }
+    }
+
+    for (i = 0; i < (unsigned int)grid_y_nbr; i++)
+    {
+        for (j = 1; j < ((unsigned int)sub_grid_y_nbr - 1); j++)
+        {
+            p = enesim_path_new();
+            enesim_path_move_to(p, x_area + 1, h - y_area - h_area * (j + i * (sub_grid_y_nbr - 1)) / (double)((grid_y_nbr - 1) * (sub_grid_y_nbr - 1)));
+            enesim_path_line_to(p, x_area + w_area, h - y_area - h_area * (j + i * (sub_grid_y_nbr - 1)) / (double)((grid_y_nbr - 1) * (sub_grid_y_nbr - 1)));
+
+            r = enesim_renderer_path_new();
+            enesim_renderer_path_path_set(r, p);
+            enesim_renderer_shape_stroke_weight_set(r, 1);
+            enesim_renderer_shape_stroke_dash_add_simple(r, 10, 8);
+            enesim_renderer_shape_stroke_color_set(r, echart_chart_sub_grid_color_get(chart));
+            enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+
+            l = enesim_renderer_compound_layer_new();
+            enesim_renderer_compound_layer_renderer_set(l, r);
+            enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+            enesim_renderer_compound_layer_add(c, l);
+        }
+    }
+
+    /* area */
     if (line->area)
     {
         for (j = 1; j < echart_data_items_count(data); j++)
@@ -297,6 +400,7 @@ echart_line_renderer_get(const Echart_Line *line)
         }
     }
 
+    /* line */
     for (j = 1; j < echart_data_items_count(data); j++)
     {
         double vmin;
