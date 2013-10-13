@@ -59,6 +59,7 @@ int main()
 
     /* we create the data */
     data = echart_data_new();
+    echart_data_title_set(data, "Test");
 
     /* we create the items for the data and add it to the data */
     /* first is the absciss, the following are the data themselves */
@@ -91,7 +92,7 @@ int main()
 
     line = echart_line_new();
     echart_line_chart_set(line, chart);
-    echart_line_area_set(line, EINA_TRUE);
+    /* echart_line_area_set(line, EINA_TRUE); */
     rline = echart_line_renderer_get(line);
 
     ee = ecore_evas_new(NULL, 0, 0, 1, 1, NULL);

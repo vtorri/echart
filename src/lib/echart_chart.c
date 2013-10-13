@@ -91,9 +91,6 @@ echart_chart_compound_get(const Echart_Chart *chart)
     Enesim_Renderer *c;
     Enesim_Renderer *r;
     Enesim_Renderer_Compound_Layer *l;
-    Enesim_Text_Font *f;
-    Enesim_Text_Engine *e;
-    Enesim_Rectangle geom;
     int i;
 
     if (!chart)
@@ -199,23 +196,6 @@ echart_chart_compound_get(const Echart_Chart *chart)
             enesim_renderer_compound_layer_add(c, l);
         }
     }
-
-    e = enesim_text_engine_default_get();
-    f = enesim_text_font_new_description_from(e, "arial", 16);
-    enesim_text_engine_unref(e);
-
-    r = enesim_renderer_text_span_new();
-    enesim_renderer_color_set(r, 0xff000000);
-    enesim_renderer_text_span_text_set(r, "Hello World!");
-    enesim_renderer_text_span_font_set(r, f);
-
-    enesim_renderer_shape_destination_geometry_get(r, &geom);
-    enesim_renderer_origin_set(r, (chart->width - geom.w) / 2, chart->height - geom.h);
-
-    l = enesim_renderer_compound_layer_new();
-    enesim_renderer_compound_layer_renderer_set(l, r);
-    enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
-    enesim_renderer_compound_layer_add(c, l);
 
     return c;
 }

@@ -40,6 +40,23 @@ struct _Echart_Line
     unsigned int additive: 1;
 };
 
+static Enesim_Renderer *
+_echart_line_text_renderer_from_double(Enesim_Text_Font *f, double d)
+{
+    char buf[256];
+    Enesim_Renderer *r;
+
+    snprintf(buf, sizeof(buf), "%d", (int)d);
+    buf[sizeof(buf) - 1] = '\0';
+
+    r = enesim_renderer_text_span_new();
+    enesim_renderer_color_set(r, 0xff000000);
+    enesim_renderer_text_span_text_set(r, buf);
+    enesim_renderer_text_span_font_set(r, f);
+
+    return r;
+}
+
 /**
  * @endcond
  */
@@ -118,11 +135,21 @@ echart_line_renderer_get(const Echart_Line *line)
     const Echart_Data_Item *item;
     Enesim_Renderer *c;
     Enesim_Renderer *r;
+    Enesim_Renderer *r_first;
     Enesim_Renderer_Compound_Layer *l;
+    Enesim_Text_Font *f;
+    Enesim_Text_Engine *e;
+    Enesim_Rectangle geom;
     Enesim_Path *p;
     Enesim_Color color;
+    Eina_Rectangle rect_first;
+    Eina_Rectangle rect;
     double avmin;
     double avmax;
+    int x_area;
+    int y_area;
+    int w_area;
+    int h_area;
     int w;
     int h;
     unsigned int i;
@@ -150,8 +177,84 @@ echart_line_renderer_get(const Echart_Line *line)
 
     c = echart_chart_compound_get(chart);
 
+    e = enesim_text_engine_default_get();
+    f = enesim_text_font_new_description_from(e, "arial", 16);
+    enesim_text_engine_unref(e);
+
+    /* title */
+
+    h_area = 0;
+    if (echart_data_title_get(data))
+    {
+        r = enesim_renderer_text_span_new();
+        enesim_renderer_color_set(r, 0xff000000);
+        enesim_renderer_text_span_text_set(r, echart_data_title_get(data));
+        enesim_renderer_text_span_font_set(r, f);
+
+        enesim_renderer_shape_destination_geometry_get(r, &geom);
+        enesim_renderer_origin_set(r, (w - geom.w) / 2, 0);
+        enesim_rectangle_normalize(&geom, &rect);
+        h_area = rect.h;
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+    }
+
+    /* abscisses */
+
     absciss = echart_data_items_get(data, 0);
     echart_data_item_interval_get(absciss, &avmin, &avmax);
+
+    r_first = _echart_line_text_renderer_from_double(f, *(double *)eina_list_nth(echart_data_item_values_get(absciss), 0));
+
+    enesim_renderer_shape_destination_geometry_get(r_first, &geom);
+    enesim_renderer_origin_set(r_first, 0, h - geom.h);
+    enesim_rectangle_normalize(&geom, &rect_first);
+    x_area = rect_first.w / 2 + 1;
+    y_area = rect_first.h;
+
+    l = enesim_renderer_compound_layer_new();
+    enesim_renderer_compound_layer_renderer_set(l, r_first);
+    enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+    enesim_renderer_compound_layer_add(c, l);
+
+    r = _echart_line_text_renderer_from_double(f, *(double *)eina_list_nth(echart_data_item_values_get(absciss), eina_list_count(echart_data_item_values_get(absciss)) - 1));
+
+    enesim_renderer_shape_destination_geometry_get(r, &geom);
+    enesim_renderer_origin_set(r, w - geom.w, h - geom.h);
+    enesim_rectangle_normalize(&geom, &rect);
+    w_area = w - (rect_first.w + rect.w) / 2;
+    if (y_area < rect.h)
+        y_area = rect.h;
+
+    l = enesim_renderer_compound_layer_new();
+    enesim_renderer_compound_layer_renderer_set(l, r);
+    enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+    enesim_renderer_compound_layer_add(c, l);
+
+    for (i = 1; i < eina_list_count(echart_data_item_values_get(absciss)) - 1; i++)
+    {
+        double d1;
+
+        r = _echart_line_text_renderer_from_double(f, *(double *)eina_list_nth(echart_data_item_values_get(absciss), i));
+
+        d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
+        d1 = x_area + w_area * (d1 - avmin) / (avmax - avmin);
+
+        enesim_renderer_shape_destination_geometry_get(r, &geom);
+        enesim_renderer_origin_set(r, d1 - geom.w / 2, h - geom.h);
+        enesim_rectangle_normalize(&geom, &rect);
+        if (y_area < rect.h)
+            y_area = rect.h;
+
+        l = enesim_renderer_compound_layer_new();
+        enesim_renderer_compound_layer_renderer_set(l, r);
+        enesim_renderer_compound_layer_rop_set(l, ENESIM_ROP_BLEND);
+        enesim_renderer_compound_layer_add(c, l);
+    }
+    h_area = h - y_area - h_area;
 
     if (line->area)
     {
@@ -171,12 +274,12 @@ echart_line_renderer_get(const Echart_Line *line)
             for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
             {
                 d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
-                d1 = w * (d1 - avmin) / (avmax - avmin);
+                d1 = x_area + w_area * (d1 - avmin) / (avmax - avmin);
                 d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
-                d2 = h * (d2 - vmin) / (vmax - vmin);
-                enesim_path_line_to(p, d1, h - d2);
+                d2 = h_area * (d2 - vmin) / (vmax - vmin);
+                enesim_path_line_to(p, d1, h - y_area - d2);
             }
-            enesim_path_line_to(p, w - 1, h - 1);
+            enesim_path_line_to(p, x_area + w_area - 1, h - y_area - 1);
             enesim_path_close(p);
 
             r = enesim_renderer_path_new();
@@ -208,13 +311,13 @@ echart_line_renderer_get(const Echart_Line *line)
         for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
         {
             d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
-            d1 = w * (d1 - avmin) / (avmax - avmin);
+            d1 = x_area + w_area * (d1 - avmin) / (avmax - avmin);
             d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
-            d2 = h * (d2 - vmin) / (vmax - vmin);
+            d2 = h_area * (d2 - vmin) / (vmax - vmin);
             if (i == 0)
-                enesim_path_move_to(p, d1, h - d2);
+                enesim_path_move_to(p, d1, h - y_area - d2);
             else
-                enesim_path_line_to(p, d1, h - d2);
+                enesim_path_line_to(p, d1, h - y_area - d2);
         }
 
         r = enesim_renderer_path_new();
