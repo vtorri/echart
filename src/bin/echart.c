@@ -92,7 +92,7 @@ int main()
 
     line = echart_line_new();
     echart_line_chart_set(line, chart);
-    /* echart_line_area_set(line, EINA_TRUE); */
+    echart_line_area_set(line, EINA_TRUE);
     rline = echart_line_renderer_get(line);
 
     ee = ecore_evas_new(NULL, 0, 0, 1, 1, NULL);

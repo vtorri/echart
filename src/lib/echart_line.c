@@ -373,16 +373,16 @@ echart_line_renderer_get(const Echart_Line *line)
             echart_data_item_interval_get(item, &vmin, &vmax);
 
             p = enesim_path_new();
-            enesim_path_move_to(p, 1, h - 1);
+            enesim_path_move_to(p, x_area + 1, h - y_area);
             for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
             {
                 d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
-                d1 = x_area + w_area * (d1 - avmin) / (avmax - avmin);
+                d1 = x_area + 1 + (w_area - 1) * (d1 - avmin) / (avmax - avmin);
                 d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
                 d2 = h_area * (d2 - vmin) / (vmax - vmin);
                 enesim_path_line_to(p, d1, h - y_area - d2);
             }
-            enesim_path_line_to(p, x_area + w_area - 1, h - y_area - 1);
+            enesim_path_line_to(p, x_area + w_area, h - y_area);
             enesim_path_close(p);
 
             r = enesim_renderer_path_new();
@@ -415,13 +415,13 @@ echart_line_renderer_get(const Echart_Line *line)
         for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
         {
             d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
-            d1 = x_area + w_area * (d1 - avmin) / (avmax - avmin);
+            d1 = x_area + 1 + (w_area - 2) * (d1 - avmin) / (avmax - avmin);
             d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
-            d2 = h_area * (d2 - vmin) / (vmax - vmin);
+            d2 = (h_area - 2) * (d2 - vmin) / (vmax - vmin);
             if (i == 0)
-                enesim_path_move_to(p, d1, h - y_area - d2);
+                enesim_path_move_to(p, d1, h - y_area - d2 - 1);
             else
-                enesim_path_line_to(p, d1, h - y_area - d2);
+                enesim_path_line_to(p, d1, h - y_area - d2 - 1);
         }
 
         r = enesim_renderer_path_new();
