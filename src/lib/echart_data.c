@@ -113,11 +113,18 @@ echart_data_items_set(Echart_Data *data, Echart_Data_Item *item)
     if (count == 20)
     {
         WRN("Maximum items count reached");
-        /* FIXME : free item */
         return;
     }
     if (count > 0)
     {
+        Echart_Data_Item *item_first;
+
+        item_first = (Echart_Data_Item *)eina_list_nth(data->items, 0);
+        if (eina_list_count(item_first->values) != eina_list_count(item->values))
+        {
+            WRN("Adding an item with different values count");
+            return;
+        }
         item->color = echart_chart_default_colors[count - 1];
     }
     data->items = eina_list_append(data->items, item);
