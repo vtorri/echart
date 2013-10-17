@@ -1,9 +1,11 @@
 # Object files
 *.o
+*.lo
 
 # Libraries
 *.lib
 *.a
+*.la
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -15,3 +17,29 @@
 *.exe
 *.out
 *.app
+src/bin/echart
+
+# Autotools
+.deps
+.dirstamp
+.libs
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+compile
+config.*
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+missing
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
+stamp-h1
+
+echart.pc
