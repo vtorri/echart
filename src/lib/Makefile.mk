@@ -6,6 +6,7 @@ includesdir = $(pkgincludedir)-@VMAJ@
 
 src_lib_libechart_la_SOURCES = \
 src/lib/echart_chart.c \
+src/lib/echart_column.c \
 src/lib/echart_data.c \
 src/lib/echart_line.c \
 src/lib/echart_main.c \
