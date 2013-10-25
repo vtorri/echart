@@ -46,6 +46,8 @@
 #endif
 
 typedef struct _Echart_Line Echart_Line;
+typedef struct _Echart_Column Echart_Column;
+
 typedef struct _Echart_Chart Echart_Chart;
 typedef struct _Echart_Data Echart_Data;
 typedef struct _Echart_Data_Item Echart_Data_Item;
@@ -107,5 +109,11 @@ EAPI Eina_Bool echart_line_area_get(const Echart_Line *line);
 EAPI void echart_line_stacked_set(Echart_Line *line, Eina_Bool stacked);
 EAPI Eina_Bool echart_line_stacked_get(const Echart_Line *line);
 EAPI Enesim_Renderer *echart_line_renderer_get(const Echart_Line *line);
+
+EAPI Echart_Column * echart_column_new(void);
+EAPI void echart_column_chart_free(Echart_Column *thiz);
+EAPI Enesim_Renderer * echart_column_renderer_get(Echart_Column *thiz);
+EAPI void echart_column_chart_set(Echart_Column *thiz, const Echart_Chart *chart);
+
 
 #endif
