@@ -28,6 +28,8 @@
 
 #include <Echart.h>
 
+#define LINE 0
+
 static void
 _echart_delete_cb(Ecore_Evas *ee EINA_UNUSED)
 {
@@ -45,6 +47,7 @@ int main()
     Enesim_Renderer *rline;
     Enesim_Log *error = NULL;
     Echart_Line *line;
+    Echart_Column *column;
     Echart_Chart *chart;
     Echart_Data *data;
     Echart_Data_Item *item;
@@ -93,11 +96,17 @@ int main()
     echart_chart_size_get(chart, &w, &h);
     echart_chart_background_color_set(chart, 255, 255, 255, 255);
 
+#if LINE
     line = echart_line_new();
     echart_line_chart_set(line, chart);
     /* echart_line_area_set(line, EINA_TRUE); */
     /* echart_line_stacked_set(line, EINA_TRUE); */
     rline = echart_line_renderer_get(line);
+#else
+    column = echart_column_new();
+    echart_column_chart_set(column, chart);
+    rline = echart_column_renderer_get(column);
+#endif
 
     ee = ecore_evas_new(NULL, 0, 0, 1, 1, NULL);
     if (!ee)
