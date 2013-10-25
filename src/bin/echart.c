@@ -61,16 +61,18 @@ int main()
     data = echart_data_new();
     echart_data_title_set(data, "Test");
 
-    /* we create the items for the data and add it to the data */
-    /* first is the absciss, the following are the data themselves */
+    /* we first create the absciss and add it to the data */
     item = echart_data_item_new();
+    echart_data_item_title_set(item, "Year");
     echart_data_item_value_add(item, 2004);
     echart_data_item_value_add(item, 2005);
     echart_data_item_value_add(item, 2006);
     echart_data_item_value_add(item, 2007);
-    echart_data_items_set(data, item);
+    echart_data_absciss_set(data, item);
 
+    /* then we create the items for the data and add it to the data */
     item = echart_data_item_new();
+    echart_data_item_title_set(item, "Sales");
     echart_data_item_value_add(item, 1000);
     echart_data_item_value_add(item, 1170);
     echart_data_item_value_add(item, 660);
@@ -78,6 +80,7 @@ int main()
     echart_data_items_set(data, item);
 
     item = echart_data_item_new();
+    echart_data_item_title_set(item, "Expenses");
     echart_data_item_value_add(item, 400);
     echart_data_item_value_add(item, 460);
     echart_data_item_value_add(item, 1120);
@@ -92,7 +95,8 @@ int main()
 
     line = echart_line_new();
     echart_line_chart_set(line, chart);
-    echart_line_area_set(line, EINA_TRUE);
+    /* echart_line_area_set(line, EINA_TRUE); */
+    /* echart_line_stacked_set(line, EINA_TRUE); */
     rline = echart_line_renderer_get(line);
 
     ee = ecore_evas_new(NULL, 0, 0, 1, 1, NULL);

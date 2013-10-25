@@ -45,6 +45,7 @@ struct _Echart_Data_Item
 struct _Echart_Data
 {
     char *title;
+    Echart_Data_Item *absciss;
     Eina_List *items;
 };
 
@@ -55,6 +56,68 @@ struct _Echart_Data
 /*============================================================================*
  *                                 Global                                     *
  *============================================================================*/
+
+Echart_Data *
+echart_data_stacked_get(const Echart_Data *data)
+{
+    Echart_Data *stacked;
+    Echart_Data_Item *item;
+    Echart_Data_Item *item_prev;
+    Echart_Data_Item *stacked_item;
+    unsigned int i;
+    unsigned int j;
+
+    stacked = echart_data_new();
+    if (!stacked)
+        return NULL;
+
+    stacked->title = strdup(data->title);
+    if (!stacked->title)
+        goto free_data;
+
+    for (i = 0; i < eina_list_count(data->items); i++)
+    {
+        /* absciss  and 1st value */
+        if ((i == 0) || (i == 1))
+        {
+            item = eina_list_nth(data->items, i);
+            stacked_item = echart_data_item_new();
+            stacked_item->title = strdup(item->title);
+            stacked_item->color = item->color;
+            stacked_item->vmin = item->vmin;
+            stacked_item->vmax = item->vmax;
+            stacked_item->values = eina_list_clone(item->values);
+            echart_data_items_set(stacked, stacked_item);
+        }
+        else
+        {
+            item_prev = eina_list_nth(data->items, i-1);
+            item = eina_list_nth(data->items, i);
+            stacked_item = echart_data_item_new();
+            stacked_item->title = strdup(item->title);
+            stacked_item->color = item->color;
+            stacked_item->vmin = item->vmin;
+            stacked_item->vmax = item->vmax;
+            for (j = 0; j < eina_list_count(item->values); j++)
+            {
+                double d1;
+                double d2;
+
+                d1 = *(double *)eina_list_nth(item_prev->values, j);
+                d2 = *(double *)eina_list_nth(item->values, j);
+                echart_data_item_value_add(stacked_item, d1 + d2);
+                printf("%f   %f %f\n", d1, d2, d1 + d2);
+            }
+            echart_data_items_set(stacked, stacked_item);
+        }
+    }
+
+    return stacked;
+
+  free_data:
+    echart_data_free(stacked);
+    return NULL;
+}
 
 /*============================================================================*
  *                                   API                                      *
@@ -102,6 +165,26 @@ echart_data_title_get(const Echart_Data *data)
 }
 
 EAPI void
+echart_data_absciss_set(Echart_Data *data, const Echart_Data_Item *absciss)
+{
+    unsigned int count;
+
+    if (!data || !absciss)
+        return;
+
+    data->absciss = (Echart_Data_Item *)absciss;
+}
+
+EAPI const Echart_Data_Item *
+echart_data_absciss_get(const Echart_Data *data)
+{
+    if (!data)
+        return NULL;
+
+    return data->absciss;
+}
+
+EAPI void
 echart_data_items_set(Echart_Data *data, Echart_Data_Item *item)
 {
     unsigned int count;
@@ -115,18 +198,13 @@ echart_data_items_set(Echart_Data *data, Echart_Data_Item *item)
         WRN("Maximum items count reached");
         return;
     }
-    if (count > 0)
-    {
-        Echart_Data_Item *item_first;
 
-        item_first = (Echart_Data_Item *)eina_list_nth(data->items, 0);
-        if (eina_list_count(item_first->values) != eina_list_count(item->values))
-        {
-            WRN("Adding an item with different values count");
-            return;
-        }
-        item->color = echart_chart_default_colors[count - 1];
+    if (eina_list_count(data->absciss->values) != eina_list_count(item->values))
+    {
+        WRN("Adding an item with different values count");
+        return;
     }
+    item->color = echart_chart_default_colors[count];
     data->items = eina_list_append(data->items, item);
 }
 

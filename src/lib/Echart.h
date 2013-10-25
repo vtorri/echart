@@ -82,6 +82,8 @@ EAPI Echart_Data *echart_data_new(void);
 EAPI void echart_data_free(Echart_Data *data);
 EAPI void echart_data_title_set(Echart_Data *data, const char *title);
 EAPI const char *echart_data_title_get(const Echart_Data *data);
+EAPI void echart_data_absciss_set(Echart_Data *data, const Echart_Data_Item *absciss);
+EAPI const Echart_Data_Item *echart_data_absciss_get(const Echart_Data *data);
 EAPI void echart_data_items_set(Echart_Data *data, Echart_Data_Item *item);
 EAPI unsigned int echart_data_items_count(const Echart_Data *data);
 EAPI const Echart_Data_Item *echart_data_items_get(const Echart_Data *data, int idx);
@@ -102,6 +104,8 @@ EAPI void echart_line_chart_set(Echart_Line *line, const Echart_Chart *chart);
 EAPI const Echart_Chart *echart_line_chart_get(const Echart_Line *line);
 EAPI void echart_line_area_set(Echart_Line *line, Eina_Bool area);
 EAPI Eina_Bool echart_line_area_get(const Echart_Line *line);
+EAPI void echart_line_stacked_set(Echart_Line *line, Eina_Bool stacked);
+EAPI Eina_Bool echart_line_stacked_get(const Echart_Line *line);
 EAPI Enesim_Renderer *echart_line_renderer_get(const Echart_Line *line);
 
 #endif

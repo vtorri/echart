@@ -135,6 +135,24 @@ echart_line_area_get(const Echart_Line *line)
     return line->area;
 }
 
+EAPI void
+echart_line_stacked_set(Echart_Line *line, Eina_Bool stacked)
+{
+    if (!line || (line->stacked == !! stacked))
+        return;
+
+    line->stacked = !!stacked;
+}
+
+EAPI Eina_Bool
+echart_line_stacked_get(const Echart_Line *line)
+{
+    if (!line)
+        return EINA_FALSE;
+
+    return line->stacked;
+}
+
 EAPI Enesim_Renderer *
 echart_line_renderer_get(const Echart_Line *line)
 {
@@ -153,6 +171,7 @@ echart_line_renderer_get(const Echart_Line *line)
     Enesim_Color color;
     Eina_Rectangle rect_first;
     Eina_Rectangle rect;
+    const char *title;
     double avmin;
     double avmax;
     int grid_x_nbr;
@@ -173,8 +192,11 @@ echart_line_renderer_get(const Echart_Line *line)
 
     chart = line->chart;
 
-    data = echart_chart_data_get(chart);
-    if (!chart)
+    if (line->stacked)
+      data = echart_data_stacked_get(echart_chart_data_get(chart));
+    else
+      data = echart_chart_data_get(chart);
+    if (!data)
     {
         ERR("A chart must have at least a data");
         return NULL;
@@ -207,13 +229,13 @@ echart_line_renderer_get(const Echart_Line *line)
     enesim_renderer_compound_layer_add(c, l);
 
     /* title */
-
     h_area = 0;
-    if (echart_data_title_get(data))
+    title = echart_data_title_get(data);
+    if (title)
     {
         r = enesim_renderer_text_span_new();
         enesim_renderer_color_set(r, 0xff000000);
-        enesim_renderer_text_span_text_set(r, echart_data_title_get(data));
+        enesim_renderer_text_span_text_set(r, title);
         enesim_renderer_text_span_font_set(r, f);
 
         enesim_renderer_shape_destination_geometry_get(r, &geom);
@@ -226,7 +248,7 @@ echart_line_renderer_get(const Echart_Line *line)
 
     /* abscisses */
 
-    absciss = echart_data_items_get(data, 0);
+    absciss = echart_data_absciss_get(data);
     echart_data_item_interval_get(absciss, &avmin, &avmax);
 
     r_first = _echart_line_text_renderer_from_double(f, *(double *)eina_list_nth(echart_data_item_values_get(absciss), 0));
@@ -392,6 +414,7 @@ echart_line_renderer_get(const Echart_Line *line)
 
         item = echart_data_items_get(data, j);
         echart_data_item_interval_get(item, &vmin, &vmax);
+        printf("\n%d  %f  %f\n\n", j, vmin, vmax);
 
         p = enesim_path_new();
         for (i = 0; i < eina_list_count(echart_data_item_values_get(item)); i++)
@@ -399,11 +422,12 @@ echart_line_renderer_get(const Echart_Line *line)
             d1 = *(double *)eina_list_nth(echart_data_item_values_get(absciss), i);
             d1 = x_area + 1 + (w_area - 1) * (d1 - avmin) / (avmax - avmin);
             d2 = *(double *)eina_list_nth(echart_data_item_values_get(item), i);
-            d2 = (h_area - 0) * (d2 - vmin) / (vmax - vmin);
+            d2 = h_area * (d2) / (vmax);
             if (i == 0)
                 enesim_path_move_to(p, d1, h - y_area - d2);
             else
                 enesim_path_line_to(p, d1, h - y_area - d2);
+            printf("%d %d %f\n", j, i, h - y_area - d2);
         }
 
         r = enesim_renderer_path_new();

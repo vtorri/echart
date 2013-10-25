@@ -53,4 +53,6 @@ extern int echart_log_dom_global;
 
 extern Echart_Colors echart_chart_default_colors[20];
 
+Echart_Data *echart_data_stacked_get(const Echart_Data *data);
+
 #endif
