@@ -21,6 +21,7 @@
 #endif
 
 #include <Enesim.h>
+#include <math.h>
 
 #include "Echart.h"
 #include "echart_private.h"
@@ -62,13 +63,14 @@
 /* TODO if this function is used too many times, we better add a shortcut
  * on enesim itself
  */
-#define ECHART_RENDERER_LAYER_ADD(c,l,r,rop) \
+#define ECHART_RENDERER_LAYER_ADD(c,r,rop) \
 do \
 { \
-    l = enesim_renderer_compound_layer_new(); \
-    enesim_renderer_compound_layer_renderer_set(l, r); \
-    enesim_renderer_compound_layer_rop_set(l, rop); \
-    enesim_renderer_compound_layer_add(c, l); \
+    Enesim_Renderer_Compound_Layer *_cl; \
+    _cl = enesim_renderer_compound_layer_new(); \
+    enesim_renderer_compound_layer_renderer_set(_cl, r); \
+    enesim_renderer_compound_layer_rop_set(_cl, rop); \
+    enesim_renderer_compound_layer_add(c, _cl); \
 } while (0)
 
 struct _Echart_Column
@@ -111,6 +113,7 @@ _echart_grid_layout_renderer_get(const Echart_Chart *chart,
     Enesim_Text_Font *f;
     Enesim_Text_Engine *e;
     const char *label;
+    double label_space;
     int font_size = 16;
     int w, h;
 
@@ -128,13 +131,14 @@ _echart_grid_layout_renderer_get(const Echart_Chart *chart,
     enesim_renderer_rectangle_size_set(r, w, h);
     enesim_renderer_shape_fill_color_set(r, echart_chart_background_color_get(chart));
     enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_FILL);
-    ECHART_RENDERER_LAYER_ADD(c, l, r, ENESIM_ROP_FILL);
+    ECHART_RENDERER_LAYER_ADD(c, r, ENESIM_ROP_FILL);
 
     /* the common text properties */
     e = enesim_text_engine_default_get();
     f = enesim_text_font_new_description_from(e, "arial", font_size);
     enesim_text_engine_unref(e);
 
+    label_space = hypot(area->h, area->w) * 0.08;
     /* title */
     label = echart_data_title_get(data);
     if (label)
@@ -147,64 +151,49 @@ _echart_grid_layout_renderer_get(const Echart_Chart *chart,
         enesim_renderer_text_span_font_set(r, f);
 
         enesim_renderer_shape_destination_geometry_get(r, &geom);
-        enesim_renderer_origin_set(r, (w - geom.w) / 2.0, 0);
+        enesim_renderer_origin_set(r, (w - geom.w) / 2.0, label_space / 2.0);
 
-        ECHART_RENDERER_LAYER_ADD(c, l, r, ENESIM_ROP_BLEND);
-        area->y += font_size;
-        area->h -= font_size;
+        ECHART_RENDERER_LAYER_ADD(c, r, ENESIM_ROP_BLEND);
+        area->y += label_space;
+        area->h -= label_space;
     }
 
+    /* calculate the chart area */
     if (x_labels)
     {
-        area->h -= font_size;
+        area->h -= label_space;
+        if (!inset && !y_labels)
+        {
+            double label_area;
+            int n_data;
+
+            n_data = eina_list_count(echart_data_item_values_get(x_labels));
+            label_area = area->w / (n_data - 1);
+            area->x += label_area / 2.0;
+            area->w -= label_area;
+        }
     }
 
     if (y_labels)
     {
-#if 0
-        const Eina_List *labels = echart_data_item_values_get(y_labels);
-        const Eina_List *ll;
-        double *d;
-        double y = area->y - font_size;
-        double x = area->x;
-        double label_area;
-        int n_data;
-
-        n_data = eina_list_count(echart_data_item_values_get(y_labels));
-        if (inset)
+        area->x += label_space;
+        area->w -= label_space * 2;
+        if (!inset && !x_labels)
         {
-            label_area = area->w / (n_data + 1);
-            x = area->x + label_area;
+            area->h -= label_space;
         }
-        else
-        {
-            label_area = area->w / n_data;
-            x = area->x;
-        }
-
-        EINA_LIST_FOREACH(labels, ll, d)
-        {
-            Enesim_Rectangle geom;
-
-            r = _echart_text_renderer_from_double(f, *d);
-            enesim_renderer_shape_destination_geometry_get(r, &geom);
-            /* center the text */
-            enesim_renderer_origin_set(r, x - (geom.w / 2), y);
-            ECHART_RENDERER_LAYER_ADD(c, l, r, ENESIM_ROP_BLEND);
-
-            x += label_area;
-        }
-        area->h -= font_size;
-#endif
     }
 
-    /* the x labels */
+    /* draw the labels */
     if (x_labels)
     {
         const Eina_List *labels = echart_data_item_values_get(x_labels);
         const Eina_List *ll;
         double *d;
-        double y = area->y + area->h;
+        /* we start at the low corner of the char area and add a margin
+         * of size of the font_size to avoid a collision with the y_labels
+         */
+        double y = area->y + area->h + (font_size / 2);
         double x;
         double label_area;
         int n_data;
@@ -217,7 +206,7 @@ _echart_grid_layout_renderer_get(const Echart_Chart *chart,
         }
         else
         {
-            label_area = area->w / n_data;
+            label_area = area->w / (n_data - 1);
             x = area->x;
         }
 
@@ -229,9 +218,45 @@ _echart_grid_layout_renderer_get(const Echart_Chart *chart,
             enesim_renderer_shape_destination_geometry_get(r, &geom);
             /* center the text */
             enesim_renderer_origin_set(r, x - (geom.w / 2), y);
-            ECHART_RENDERER_LAYER_ADD(c, l, r, ENESIM_ROP_BLEND);
-
+            ECHART_RENDERER_LAYER_ADD(c, r, ENESIM_ROP_BLEND);
             x += label_area;
+        }
+        
+    }
+
+    if (y_labels)
+    {
+        const Eina_List *labels = echart_data_item_values_get(y_labels);
+        const Eina_List *ll;
+        double *d;
+        double y;
+        double x = area->x - label_space;
+        double label_area;
+        int n_data;
+
+        n_data = eina_list_count(echart_data_item_values_get(y_labels));
+        if (inset)
+        {
+            label_area = area->h / (n_data + 1);
+            y = area->y + label_area;
+        }
+        else
+        {
+            label_area = area->h / (n_data - 1);
+            y = area->y - (font_size / 2);
+        }
+
+        EINA_LIST_FOREACH(labels, ll, d)
+        {
+            Enesim_Rectangle geom;
+
+            r = _echart_text_renderer_from_double(f, *d);
+            enesim_renderer_shape_destination_geometry_get(r, &geom);
+            /* center the text */
+            enesim_renderer_origin_set(r, x, y);
+            ECHART_RENDERER_LAYER_ADD(c, r, ENESIM_ROP_BLEND);
+
+            y += label_area;
         }
     }
 
@@ -244,7 +269,17 @@ _echart_grid_layout_renderer_get(const Echart_Chart *chart,
         enesim_renderer_shape_stroke_color_set(r, 0xff000000);
         enesim_renderer_shape_stroke_weight_set(r, 1);
         enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
-        ECHART_RENDERER_LAYER_ADD(c, l, r, ENESIM_ROP_BLEND);
+        ECHART_RENDERER_LAYER_ADD(c, r, ENESIM_ROP_BLEND);
+    }
+    else
+    {
+        r = enesim_renderer_line_new();
+        //enesim_renderer_line_coords_set(r, area->x + area->w, area->y, area->x + area->w, area->y + area->h);
+        enesim_renderer_line_coords_set(r, area->x, area->y + area->h, area->x + area->w, area->y + area->h);
+        enesim_renderer_shape_stroke_color_set(r, 0xff000000);
+        enesim_renderer_shape_stroke_weight_set(r, 1);
+        enesim_renderer_shape_draw_mode_set(r, ENESIM_RENDERER_SHAPE_DRAW_MODE_STROKE);
+        ECHART_RENDERER_LAYER_ADD(c, r, ENESIM_ROP_BLEND);
     }
 
     return c;
@@ -291,13 +326,62 @@ echart_column_renderer_get(Echart_Column *thiz)
     const Echart_Data *data;
     const Echart_Data_Item *absciss;
     Enesim_Rectangle geom;
+    Enesim_Renderer *r;
+    double bar_width;
+    double data_area;
+    int n_data;
+    int n_items;
+    int i;
+    double start_x;
+    double x;
 
     chart = thiz->chart;
     data = echart_chart_data_get(chart);
 
     absciss = echart_data_items_get(data, 0);
  
-    return _echart_grid_layout_renderer_get(thiz->chart, absciss, NULL, EINA_TRUE, EINA_TRUE, &geom);
+    /* define the layout */
+    r = _echart_grid_layout_renderer_get(thiz->chart, absciss, NULL, EINA_TRUE, EINA_FALSE, &geom);
+
+    /* define the bars which at most should be 80% of the whole area defined for it */
+    n_data = eina_list_count(echart_data_item_values_get(absciss));
+    data_area = geom.w / (n_data + 1);
+
+    n_items = echart_data_items_count(data);
+    bar_width = (data_area * 0.8) / (n_items - 1);
+    start_x = (geom.x + data_area) - (data_area * 0.4);
+
+    for (i = 1; i < n_items; i++)
+    {
+        const Echart_Data_Item *item = echart_data_items_get(data, i);
+        Enesim_Color color;
+        const Eina_List *l;
+        uint8_t ca, cr, cg, cb;
+        double *d;
+
+        enesim_argb_components_to(echart_data_item_color_get(item).area, &ca, &cr, &cg, &cb);
+        enesim_color_components_from(&color, ca, cr, cg, cb);
+
+        x = start_x + ((i - 1) * bar_width);
+        EINA_LIST_FOREACH(echart_data_item_values_get(item), l, d)
+        {
+            Enesim_Renderer *b;
+            double h;
+
+            b = enesim_renderer_rectangle_new();
+            enesim_renderer_rectangle_position_set(b, x, geom.y);
+            /* TODO instead of geom.h we need to calculate the percentage based on min/max values */
+            enesim_renderer_rectangle_size_set(b, bar_width, geom.h);
+
+            enesim_renderer_shape_fill_color_set(b, color);
+
+            enesim_renderer_shape_draw_mode_set(b, ENESIM_RENDERER_SHAPE_DRAW_MODE_FILL);
+            ECHART_RENDERER_LAYER_ADD(r, b, ENESIM_ROP_BLEND);
+            x += data_area;
+        }
+    }
+    
+    return r;
 }
 
 /*============================================================================*
